@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const fs = require('fs')
+const path = require('path')
 
 let win
 
@@ -16,6 +17,7 @@ function createWindow() {
     webPreferences: { nodeIntegration: true, contextIsolation: false },
     show: false,
     hasShadow: true,
+    icon: path.join(__dirname, 'icon.ico'),
   })
 
   win.loadFile('index.html')
@@ -41,6 +43,15 @@ ipcMain.handle('save-file', async (e, { filePath, content }) => {
   if (filePath) { fs.writeFileSync(filePath, content, 'utf-8'); return filePath }
   const { filePath: p } = await dialog.showSaveDialog(win, {
     filters: [{ name: 'Текст', extensions: ['txt','md'] }]
+  })
+  if (!p) return null
+  fs.writeFileSync(p, content, 'utf-8'); return p
+})
+
+ipcMain.handle('save-json-file', async (e, { content, defaultName }) => {
+  const { filePath: p } = await dialog.showSaveDialog(win, {
+    defaultPath: defaultName || 'settings.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
   })
   if (!p) return null
   fs.writeFileSync(p, content, 'utf-8'); return p
